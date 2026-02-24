@@ -1,0 +1,74 @@
+# Alpine-Maintainer: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=qt6-webchannel
+pkgver=6.10.0
+pkgrel=0
+pkgdesc="Provides access to QObject or QML objects from HTML clients"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends="libc++
+    qnx-io-sock
+    qt6-base
+    qt6-declarative
+    "
+depends_dev="
+    qt6-base-dev
+    qt6-websockets-dev
+    "
+makedepends="$depends_dev
+    cmake
+    perl
+    ninja
+    qt6-declarative-dev
+    qt6-declarative-private-dev
+    "
+subpackages="$pkgname-dev"
+source="https://download.qt.io/official_releases/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtwebchannel-everywhere-src-${pkgver/_/-}.tar.xz"
+options="!check" # No tests
+builddir="$srcdir/qtwebchannel-everywhere-src-${pkgver/_/-}"
+
+build() {
+    # It's qcc here, but compiled with clang on the selfhosted system
+    if [[ $CARCH == "x86_64" ]]; then
+        _triplet="qnx-x86-64-qcc"
+    elif [[ $CARCH == "aarch64" ]]; then
+        _triplet="qnx-aarch64le-qcc"
+    else
+        die "$CARCH not supported"
+    fi
+
+    _warn="-Wno-character-conversion"
+
+    export CC=clang
+    export CXX=clang++
+    export CFLAGS="$_warn"
+    export CXXFLAGS="$_warn"
+    export LDFLAGS="-lsocket"
+    export LD_LIBRARY_PATH="$builddir/build/lib:$LD_LIBRARY_PATH"
+
+    cmake -B build -G Ninja \
+        -DCMAKE_SKIP_RPATH=ON \
+        -DQT_QMAKE_TARGET_MKSPEC=$_triplet \
+        -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_MESSAGE_LOG_LEVEL=STATUS \
+        -DFEATURE_pkg_config=ON
+
+    cmake --build build --parallel
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+    default_dev
+
+    amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+33723bf5dc35b9baf70527827528c291000b81fde647d1d7499fc145057bd3df0b5be2510a3cf145bd93055fde6e8b22f9341f34a04c38c9a0924a3506036fff  qtwebchannel-everywhere-src-6.10.0.tar.xz
+"
