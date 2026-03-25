@@ -2,7 +2,7 @@
 # Maintainer: Felix Xing <fxing@qnx.com>
 pkgname=qt6-webchannel
 pkgver=6.10.0
-pkgrel=${pkgrel:-0}
+pkgrel=0
 pkgdesc="Provides access to QObject or QML objects from HTML clients"
 url="https://qt.io/"
 arch="all"
@@ -69,7 +69,6 @@ dev() {
     amove usr/lib/qt6/sbom
 }
 
-options="$options ${DISABLE_CHECK:+!check}"
 sha512sums="
 33723bf5dc35b9baf70527827528c291000b81fde647d1d7499fc145057bd3df0b5be2510a3cf145bd93055fde6e8b22f9341f34a04c38c9a0924a3506036fff  qtwebchannel-everywhere-src-6.10.0.tar.xz
 "
